@@ -28,12 +28,33 @@ def close_db():
 
 app.teardown_appcontext(close_db)
 
+# -- Initialize db and set dummy data
 def init_db():
     db = get_db()
 
     db.executescript(""" 
-        DROP TABLE IF EXISTS 
+        DROP TABLE IF EXISTS users;
+        CREATE TABLE users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            password TEXT NOT NULL
+        );
+        INSERT INTO users (name, email, password) VALUES ('Test User', 'test@uia.no', '1234');
     """)
+    db.commit()
+    db.executescript(""" 
+        DROP TABLE IF EXISTS books;
+        CREATE TABLE books (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            password TEXT NOT NULL
+        );
+        INSERT INTO users (name, email, password) VALUES ('Test User', 'test@uia.no', '1234');
+    """)
+    print("Database initialized")
+
 # Routes
 @app.route("/")
 def home():
