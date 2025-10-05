@@ -1,5 +1,6 @@
-# Imports
-from flask import Flask, render_template, g, cli, request, session, redirect, url_for, flash
+import os
+from flask import Flask, render_template, g, cli, request, session, redirect, url_for, flash, abort
+from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 import sqlite3
 import click
 from datetime import datetime
@@ -12,7 +13,41 @@ DB = 'app.db'
 app.config['SECRET_KEY'] = 'super_duper_massive_hashed_key_shush_no_peeping'
 # -- Hot reload so I don't have to restart app all the time
 app.config.update(TEMPLATES_AUTO_RELOAD=True)
+# -- Login management configuration
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login' 
+login_manager.login_message = "Please log in to access this page." 
 
+# -- User model
+class User(UserMixin):
+    def __init__(self, id, name, email, password):
+        self.id = id
+        self.name = name
+        self.email = email
+        self.password = password
+
+    def get_id(self):
+        return str(self.id)
+
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
+    
+@login_manager.user_loader
+def load_user(user_id):
+    db = get_db()
+    # SQL query to get the user by their id
+    user_row = db.execute("SELECT id, name, email, password FROM users WHERE id = ?", (user_id,)).fetchone()
+    
+    if user_row:
+        # Create a User object from the row data
+        return User(
+            id=user_row['id'], 
+            name=user_row['name'], 
+            email=user_row['email'], 
+            password=user_row['password']
+        )
+    return None
 
 # DB Functions
 def get_db():
@@ -48,7 +83,7 @@ def init_db():
         DROP TABLE IF EXISTS users;
         CREATE TABLE users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
+            name TEXT NOT NULL UNIQUE, 
             email TEXT NOT NULL,
             password TEXT NOT NULL
         );
@@ -296,20 +331,15 @@ def books_list():
 @app.route("/threads")
 def threads_list():
     db = get_db()
+
     threads = db.execute(
-        'SELECT * FROM threads ORDER BY title'
+        'SELECT t.id, t.title, t.created_at, b.title AS book_title '
+        'FROM threads t '
+        'JOIN books b ON t.book_id = b.id '
+        'ORDER BY t.created_at DESC'  
     ).fetchall()
+    
     return render_template("threads.html", threads=threads)
-
-# AUTH routes
-
-@app.route("/login")
-def login():
-    return render_template("login.html")
-
-@app.route("/logout")
-def logout():
-    flash("Logged out")
 
 @app.route("/threads/<int:thread_id>")
 def thread_detail(thread_id):
@@ -337,7 +367,115 @@ def thread_detail(thread_id):
     ).fetchall()
 
     return render_template('discussion.html', thread=thread, posts=posts)
+
+# AUTH routes
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+
+    if request.method == 'POST':
+        name = request.form.get('name')
+        password = request.form.get('password')
+        
+        # Simple email generation for simplicity's sake
+        email = f"{name}@forum.com" 
+        
+        if not name or not password:
+            flash('Username and password are required.', 'danger')
+            return redirect(url_for('register'))
+        
+        db = get_db()
+        
+        # Check if username (stored in DB 'name' column) already exists
+        existing_user = db.execute("SELECT id FROM users WHERE name = ?", (name,)).fetchone()
+        if existing_user:
+            flash('That username is already taken.', 'danger')
+            return redirect(url_for('register'))
+
+        try:
+            # Hash the password for secure storage
+            password = generate_password_hash(password)
+
+            db.execute(
+                "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+                (name, email, password)
+            )
+            db.commit()
+            
+            flash('Registration successful! You can now log in.', 'success')
+            return redirect(url_for('login'))
+        except sqlite3.Error as e:
+            flash(f'A database error occurred: {e}', 'danger')
+            return redirect(url_for('register'))
+
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+
+    if request.method == 'POST':
+        # --- Debugging Logs Added ---
+        print("--- DEBUG: Starting Login Attempt ---")
+        
+        name = request.form.get('name')
+        password = request.form.get('password')
+        
+        print(f"DEBUG: Form Data Received: Name='{name}', Password is set.") # Never print the password itself
+        
+        db = get_db()
+        # Query the database for the user using the 'name' column
+        user_row = db.execute("SELECT id, name, email, password FROM users WHERE name = ?", (name,)).fetchone()
+        
+        # Check if user exists and password is correct
+        if user_row:
+            print("DEBUG: User Found in DB.")
+            user = User(
+                id=user_row['id'], 
+                name=user_row['name'], 
+                email=user_row['email'], 
+                password=user_row['password']
+            )
+            
+            if user.check_password(password):
+                print("DEBUG: Password MATCHED! Logging in and redirecting.")
+                login_user(user, remember=True) 
+                
+                
+                next_page = request.args.get('next')
+                flash(f'Welcome back, {user.name}!', 'success')
+                return redirect(next_page or url_for('home'))
+            else:
+                print("DEBUG: Password FAILED to match.")
+        
+        else:
+            print("DEBUG: User NOT found in database.")
+
+        # If user_row is None OR password check failed, execution falls here
+        flash('Invalid username or password.', 'danger')
+        print("DEBUG: Login failed. Flashing error and re-rendering login page.")
+        print("---------------------------------")
+
+
+    return render_template('login.html')
+@app.route('/logout')
+@login_required 
+def logout():
+    logout_user()
+    flash('You have been logged out successfully.', 'info')
+    return redirect(url_for('home'))
+
+@app.route('/create_post')
+@login_required
+def create_post():
+    # TODO: Define post functionality within threads/# 
+    return "This is where you can create a post."
     
 # Run app
 if __name__ == "__main__":
+    # Ensure the DB is initialized before starting the app
+    with app.app_context():
+        init_db() 
     app.run(debug=True)
