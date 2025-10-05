@@ -341,10 +341,44 @@ def threads_list():
     
     return render_template("threads.html", threads=threads)
 
-@app.route("/threads/<int:thread_id>")
+@app.route("/threads/<int:thread_id>", methods=['GET', 'POST'])
 def thread_detail(thread_id):
     db = get_db()
 
+    # ---- Post handling
+    if request.method == 'POST':
+        # Check if user is logged in
+        if not current_user.is_authenticated:
+            # We don't use @login_required here because we want to show the thread even if they aren't logged in
+            flash("You must be logged in to post a comment.", 'danger')
+            return redirect(url_for('login')) # Redirect to login if not authenticated
+
+        content = request.form.get('content')
+
+        # Validate content
+        if not content or len(content.strip()) < 5:
+            flash("Comment content must be at least 5 characters long.", 'danger')
+            # Redirect back to the thread page to see the error flash
+            return redirect(url_for('thread_detail', thread_id=thread_id))
+        
+        try:
+            # Insert into posts table
+            db.execute(
+                "INSERT INTO posts (thread_id, user_id, content, created_at) VALUES (?, ?, ?, DATETIME('now'))",
+                (thread_id, current_user.id, content)
+            )
+            db.commit()
+            flash("Your comment was posted successfully!", 'success')
+        except sqlite3.Error as e:
+            flash(f"A database error occurred while posting: {e}", 'danger')
+            print(f"DATABASE ERROR: {e}")
+
+        # Always redirect after a successful POST (or failure) to prevent double submission
+        return redirect(url_for('thread_detail', thread_id=thread_id))
+    
+
+
+    # ---- Display the thread
     thread = db.execute(
         'SELECT t.id, t.title, t.created_at, u.name AS thread_starter, '
         'b.title AS book_title, b.description AS book_description '
@@ -357,6 +391,7 @@ def thread_detail(thread_id):
 
     if thread is None:
         abort(404)
+        
     posts = db.execute(
         'SELECT p.content, p.created_at, u.name AS post_author '
         'FROM posts p '
@@ -367,6 +402,7 @@ def thread_detail(thread_id):
     ).fetchall()
 
     return render_template('discussion.html', thread=thread, posts=posts)
+
 
 # AUTH routes
 @app.route('/register', methods=['GET', 'POST'])
