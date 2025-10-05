@@ -58,7 +58,7 @@ def init_db():
         );
         INSERT INTO authors (name, dob) VALUES ('Rick Riordan', '05-06-1964');
         INSERT INTO authors (name, dob) VALUES ('Christopher Paolini', '17-11-1983');
-        INSERT INTO authors (name, dob) VALUES ('Rick Riordan', '31-07-1965');
+        INSERT INTO authors (name, dob) VALUES ('J.K. Rowling', '31-07-1965');
     """)
     db.commit()
 
