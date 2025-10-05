@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Authors{% endblock %}
+
+{% block content %}
+<h1 class="text-4xl font-extrabold text-gray-900 mb-6">Cataloged Authors</h1>
+<p class="text-lg text-gray-600 mb-8">A list of all the fantasy authors currently included in our database.</p>
+
+<div class="space-y-4">
+    {% for author in authors %}
+    <div class="bg-gray-50 p-4 border border-gray-200 rounded-lg flex justify-between items-center hover:bg-gray-100 transition duration-150">
+        <div>
+            <h2 class="text-2xl font-semibold text-indigo-600">{{ author.name }}</h2>
+            <p class="text-sm text-gray-500">Author ID: {{ author.id }}</p>
+        </div>
+        <div class="text-right">
+            <p class="text-md font-medium text-gray-700">Born: {{ author.dob }}</p>
+            <a href="#" class="text-sm text-indigo-500 hover:text-indigo-700">View Books &rarr;</a>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-gray-500">No authors found in the database.</p>
+    {% endfor %}
+</div>
+{% endblock %}

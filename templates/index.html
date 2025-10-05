@@ -1,15 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Home</title>
-  </head>
-  <body>
-    <main>
-      <h1>Welcome to IKT222 Assignment 2</h1>
-      <p>This is the home page.</p>
-    <script></script>
-  </body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<h1 class="text-4xl font-extrabold text-gray-900 mb-4">Welcome to the Fantasy Book Forum</h1>
+<p class="text-lg text-gray-600 mb-6">This is the central hub for discussing the great works of Rick Riordan, Christopher Paolini, and J.K. Rowling.</p>
+
+<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="p-4 bg-indigo-50 border-l-4 border-indigo-500 rounded-lg shadow-sm">
+        <h2 class="text-xl font-semibold text-indigo-700 mb-2">Books</h2>
+        <p class="text-gray-700">Browse and discover all the fantasy novels in our catalog.</p>
+    </div>
+    <div class="p-4 bg-green-50 border-l-4 border-green-500 rounded-lg shadow-sm">
+        <h2 class="text-xl font-semibold text-green-700 mb-2">Threads</h2>
+        <p class="text-gray-700">Jump into active discussions and reviews with other members.</p>
+    </div>
+    <div class="p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg shadow-sm">
+        <h2 class="text-xl font-semibold text-yellow-700 mb-2">Authors</h2>
+        <p class="text-gray-700">View information about the amazing creators behind these stories.</p>
+        <a href="{{ url_for('authors_list') }}" class="mt-2 inline-block text-sm font-medium text-yellow-700 hover:text-yellow-900">View Authors &rarr;</a>
+    </div>
+</div>
+
+{% endblock %}

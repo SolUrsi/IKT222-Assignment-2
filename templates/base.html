@@ -1,0 +1,52 @@
+<!-- Base HTML for site, features navbar etc. Uses Ninja formatting for inserts (as mentioned in app.py) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Book Forum{% endblock %}</title>
+    <!-- Tailwind CSS so I don't have to do my own CSS styling-->
+    <script src="https://cdn.tailwindcss.com"></script>    
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Navbar-->
+     <nav class="bg-gray-800 shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo/Branding -->
+                <div class="flex items-center">
+                    <a href="{{ url_for('home') }}" class="flex-shrink-0 text-2xl font-bold text-white tracking-wider">
+                        Forum
+                    </a>
+                </div>
+                
+                <!-- Main Navigation Links -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="{{ url_for('home') }}" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150">Home</a>
+                        <a href="{{ url_for('authors_list') }}" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150">Authors</a>
+                        <!-- TODO: Add Books/Threads link here -->
+                        
+                        <!-- Auth Links (Placeholder) -->
+                        <a href="#" class="bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 shadow-md">Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow p-4 sm:p-6 lg:p-8">
+        <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-auto">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-400">
+            &copy; 2025 Fantasy Book Discussion Forum | IKT222 Assignment 2
+        </div>
+    </footer>
+</body>
+</html>
