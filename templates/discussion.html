@@ -47,7 +47,8 @@
         <p class="font-semibold text-gray-900">{{ post.post_author }}</p>
         <p class="text-xs text-gray-500">{{ post.created_at }}</p>
       </div>
-      <p class="text-gray-700">{{ post.content }}</p>
+      <!-- Jinja now sanitizes contents again-->
+      <p class="text-gray-700">{{ post.content}}</p>
     </div>
     {% else %}
     <p class="text-gray-500 italic">Be the first to comment!</p>
