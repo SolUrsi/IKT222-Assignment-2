@@ -273,7 +273,6 @@ def init_db_command():
     click.echo('Initialized the database.')
 
 # General Routes
-# -- Use Jinja to format HTML ( {% %} )
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -302,7 +301,7 @@ def threads_list():
     ).fetchall()
     return render_template("threads.html", threads=threads)
 
-# Route to discussion for specific thread
+# AUTH routes
 
 @app.route("/login")
 def login():
@@ -311,6 +310,33 @@ def login():
 @app.route("/logout")
 def logout():
     flash("Logged out")
+
+@app.route("/threads/<int:thread_id>")
+def thread_detail(thread_id):
+    db = get_db()
+
+    thread = db.execute(
+        'SELECT t.id, t.title, t.created_at, u.name AS thread_starter, '
+        'b.title AS book_title, b.description AS book_description '
+        'FROM threads t '
+        'JOIN users u ON t.user_id = u.id '
+        'JOIN books b ON t.book_id = b.id '
+        'WHERE t.id = ?',
+        (thread_id,)
+    ).fetchone()
+
+    if thread is None:
+        abort(404)
+    posts = db.execute(
+        'SELECT p.content, p.created_at, u.name AS post_author '
+        'FROM posts p '
+        'JOIN users u ON p.user_id = u.id '
+        'WHERE p.thread_id = ? '
+        'ORDER BY p.created_at ASC',
+        (thread_id,)
+    ).fetchall()
+
+    return render_template('discussion.html', thread=thread, posts=posts)
     
 # Run app
 if __name__ == "__main__":
