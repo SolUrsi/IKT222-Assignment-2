@@ -7,9 +7,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 # Configuration
 app = Flask(__name__)
+DB = 'app.db'
 # -- Very secret key, much hidden, much wow
 app.config['SECRET_KEY'] = 'super_duper_massive_hashed_key_shush_no_peeping'
-DB = 'app.db'
+# -- Hot reload so I don't have to restart app all the time
+app.config.update(TEMPLATES_AUTO_RELOAD=True)
+
 
 # DB Functions
 def get_db():
@@ -282,6 +285,24 @@ def authors_list():
         'SELECT * FROM authors ORDER BY name'
     ).fetchall()
     return render_template("authors.html", authors=authors)
+
+@app.route("/books")
+def books_list():
+    db = get_db()
+    books = db.execute(
+        'SELECT * FROM books ORDER BY authorid'
+    ).fetchall()
+    return render_template("books.html", books=books)
+
+@app.route("/threads")
+def threads_list():
+    db = get_db()
+    threads = db.execute(
+        'SELECT * FROM threads ORDER BY title'
+    ).fetchall()
+    return render_template("threads.html", threads=threads)
+
+# Route to discussion for specific thread
 
 @app.route("/login")
 def login():

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Books{% endblock %}
+
+{% block content %}
+<h1 class="text-4xl font-extrabold text-gray-900 mb-6">Cataloged Books</h1>
+<p class="text-lg text-gray-600 mb-8">A list of all the fantasy books currently included in our database.</p>
+
+<div class="space-y-4">
+    {% for book in books %}
+    <div class="bg-gray-50 p-4 border border-gray-200 rounded-lg flex justify-between items-center hover:bg-gray-100 transition duration-150">
+        <div>
+            <h2 class="text-2xl font-semibold text-indigo-600">{{ book.title }}</h2>
+            <p class="text-md font-medium text-gray-700">{{ book.description }}</p>
+        </div>
+        <div class="text-right">
+            <a href="{{url_for('threads_list')}}" class="text-sm text-indigo-500 hover:text-indigo-700">View threads &rarr;</a>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-gray-500">No books found in the database.</p>
+    {% endfor %}
+</div>
+{% endblock %}
