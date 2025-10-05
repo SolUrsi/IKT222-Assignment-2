@@ -1,14 +1,15 @@
 # Imports
-from flask import Flask, render_template, g, cli
+from flask import Flask, render_template, g, cli, request, session, redirect, url_for, flash
 import sqlite3
 import click
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash 
 
 # Configuration
-DB = 'app.db'
-
-# Initialization
 app = Flask(__name__)
+# -- Very secret key, much hidden, much wow
+app.config['SECRET_KEY'] = 'super_duper_massive_hashed_key_shush_no_peeping'
+DB = 'app.db'
 
 # DB Functions
 def get_db():
@@ -30,12 +31,17 @@ def close_db(e=None):
 
 app.teardown_appcontext(close_db)
 
+
 # -- Initialize db and set dummy data
 def init_db():
     db = get_db()
 
+    # ---- Hashing dummy passwords
+    hashed_admin_pass = generate_password_hash('admin1234')
+    hashed_fan_pass = generate_password_hash('test1234')
+
     # ---- User inserts
-    db.executescript(""" 
+    db.executescript(f""" 
         DROP TABLE IF EXISTS users;
         CREATE TABLE users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,8 +49,8 @@ def init_db():
             email TEXT NOT NULL,
             password TEXT NOT NULL
         );
-        INSERT INTO users (name, email, password) VALUES ('Admin', 'admin@forum.com', 'admin1234');
-        INSERT INTO users (name, email, password) VALUES ('FantasyFan99', 'fan99@forum.com', 'test1234');
+        INSERT INTO users (name, email, password) VALUES ('Admin', 'admin@forum.com', '{hashed_admin_pass}');
+        INSERT INTO users (name, email, password) VALUES ('FantasyFan99', 'fan99@forum.com', '{hashed_fan_pass}');
     """)
     db.commit()
 
@@ -263,7 +269,7 @@ def init_db_command():
     init_db()
     click.echo('Initialized the database.')
 
-# Routes
+# General Routes
 # -- Use Jinja to format HTML ( {% %} )
 @app.route("/")
 def home():
@@ -275,8 +281,16 @@ def authors_list():
     authors = db.execute(
         'SELECT * FROM authors ORDER BY name'
     ).fetchall()
-
     return render_template("authors.html", authors=authors)
+
+@app.route("/login")
+def login():
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    flash("Logged out")
+    
 # Run app
 if __name__ == "__main__":
     app.run(debug=True)

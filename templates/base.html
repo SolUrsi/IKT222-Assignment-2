@@ -27,8 +27,15 @@
                         <a href="{{ url_for('authors_list') }}" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150">Authors</a>
                         <!-- TODO: Add Books/Threads link here -->
                         
-                        <!-- Auth Links (Placeholder) -->
-                        <a href="#" class="bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 shadow-md">Login</a>
+                        <!-- Auth Links -->
+                        {% if g.user %}
+                            <!-- LOGGED IN VIEW -->
+                            <span class="text-gray-300 text-sm font-medium hidden sm:block">Hello, {{ g.user.name }}</span>
+                            <a href="{{ url_for('logout') }}" class="bg-red-600 text-white hover:bg-red-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 shadow-md">Logout</a>
+                        {% else %}
+                            <!-- LOGGED OUT VIEW -->
+                            <a href="{{ url_for('login')}}" class="bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 shadow-md">Login</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -37,8 +44,12 @@
 
     <!-- Main Content -->
     <main class="flex-grow p-4 sm:p-6 lg:p-8">
-        <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg">
-            {% block content %}{% endblock %}
+        <div class="max-w-4xl mx-auto">
+
+            <!-- Content Block Container -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                {% block content %}{% endblock %}
+            </div>
         </div>
     </main>
 
